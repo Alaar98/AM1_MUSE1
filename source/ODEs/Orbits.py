@@ -2,7 +2,7 @@ from  numpy import split, concatenate, array
 import numpy as np
 from numpy.linalg import    norm
 
-def F_Kepler(U, t):
+def Kepler(U, t):
 
     r, drdt  = split( U, 2) 
     dvdt = -r/norm(r)**3 

@@ -1,4 +1,7 @@
-# Milestone 1: Prototypes to integrate orbits without functions
+
+#########################################################################
+###   Milestone 1: Prototypes to integrate orbits without functions   ###
+#########################################################################
 
 import numpy as np
 from scipy.optimize import newton

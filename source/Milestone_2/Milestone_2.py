@@ -1,30 +1,67 @@
 
-# Milestone 2: Prototypes to integrate orbits with functions
+######################################################################
+###   Milestone 2: Prototypes to integrate orbits with functions   ###
+######################################################################
 
-from numpy import array, linspace,zeros
-from scipy import optimize
+from numpy import array, zeros
 import matplotlib.pyplot as plt
+from ODEs.Temporal_Schemes import Euler, CN, RK4, Inverse_Euler
+from ODEs.Orbits import Kepler
 
-def F(U):
-    x, y, vx, vy = U[0], U[1], U[2], U[3]
-    mr = (x*2 + y*2)*1.5
-    return array ( [ vx, vy, -x/mr, -y/mr] ) 
+# 1. Function to integrate one step using Euler method
 
-def Euler(U,t_1,t_2,F):
-    return U+(t_2-t_1)*F(U,t_1)
+# 2. Function to integrate one step using Crank-Nicolson method
 
-def Crank_Nicholson(U,t_1,t_2,F):
-    def Residual (X):
-        return X-U-(t_2-t_1)*0.5*(F(U,t_1)+F(X,t_2))
-    return optimize.newton (Residual,U)
+# 3. Function to integrate one step using RK4 method
 
-def Cauchy_Problem (time_domain,Euler,F,U):
-    for n in range (0,time_domain[len(time_domain)]):
-        U[:,n+1] = Euler(U[:,n],time_domain[n],time_domain[n+1],F)
-        return
+# 4. Function to integrate one step using Inverse Euler method
 
+# 5. Function to integrate a Cauchy problem
 
-N = 1000000
-U = array( [1, 0, 0, 1] ) 
-dt = 0.01
-time_domain = linspace (0, N*dt, N+1)
+# 6. Function to express the force of the Kepler movement
+
+# 7. Integrate a Kepler with different schemes and explain the results
+
+def plot_kepler_orbit(N, dt, method):
+    U = array([1, 0, 0, 1])  # Initial value of U
+    x = zeros(N)
+    y = zeros(N)
+    t = zeros(N)
+    
+    x[0] = U[0]
+    y[0] = U[1]
+    t[0] = 0
+
+    for i in range(1, N):
+        t[i] = dt * i
+        if method == 'Euler':
+            U = Euler(U, t, dt, Kepler)
+        elif method == 'CN':
+            U = CN(U, t, dt, Kepler)
+        elif method == 'RK4':
+            U = RK4(U, t, dt, Kepler)
+        elif method == 'Inverse_Euler':
+            U = Inverse_Euler(U, t, dt, Kepler)
+            
+        x[i] = U[0]
+        y[i] = U[1]
+    
+    plt.plot(x, y)
+    plt.xlabel('X Position')
+    plt.ylabel('Y Position')
+    plt.title(f'Kepler Orbit ({method} METHOD) for N={N} and dt={dt}')
+    plt.show()
+
+# Kepler with Euler method & print
+plot_kepler_orbit(10000, 0.01, 'Euler')
+
+# Kepler with CN method & print
+plot_kepler_orbit(100, 0.1, 'CN')
+
+# Kepler with RK4 method & print
+plot_kepler_orbit(100, 0.1, 'RK4')
+
+# Kepler with Inverse Euler method & print
+plot_kepler_orbit(20, 0.1, 'Inverse_Euler')
+
+# 8. Increase and decrease the time step and explain the results (Refer to Milestone 1)
