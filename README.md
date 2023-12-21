@@ -15,3 +15,8 @@ Este repositorio es una recopilación de los programas de Python creados para re
 
 Gracias a la resolución de estos ejercicios he podido aumentar mi nivel de programación en Python comprendiendo conceptos como el uso de funciones, punteros, esquemas temporales explícitos e implícitos y la estabilidad tanto de un esquema temporal como de una ecuación diferencial ordinaria. 
 
+Organización de módulos del Milestone 7 obtenida mediante la herramienta software-design:
+
+<p align="center">
+  <img src=".\souce\Milestone_7\Organizacion_de_Modulos.png" alt="Descripción de la imagen">
+</p>
