@@ -1,132 +1,45 @@
 from scipy.optimize import newton
-from numpy import zeros, dot, matmul, array, prod, zeros, zeros_like, dot, sum, where
-from numpy.linalg import norm,eig
-
-#Funcion del Esquema Temporal de Euler
-def Euler( U, dt, t, F): 
-
-   return U + dt * F( U,t ) 
-
-#Funcion del Esquema Temporal Runge-Kutta de orden 4
-def RK4( U, dt, t, F): 
-
-     k1 = F( U, t)
-     k2 = F( U + dt * k1/2, t + dt/2 )
-     k3 = F( U + dt * k2/2, t + dt/2 )
-     k4 = F( U + dt * k3,   t + dt   )
- 
-     return U + dt * ( k1 + 2*k2 + 2*k3 + k4 )/6
-
-#Funcion del Esquema Temporal de Euler Inverso
-def Inverse_Euler( U, dt, t, F): 
-
-   def  Residual_IE(X):  
-
-          return  X - U - dt * F(X, dt + t) 
-
-   return  newton( Residual_IE, U )
+from ERK_functions import butcher, RK_stages, StepSize
+from Newton import Jacobian2 
+from numpy.linalg import eig, norm
+from numpy import zeros,eye, array, zeros_like, prod, where, dot
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+def Euler(U, t1, t2, F):
     
-#Funcion del Esquema Temporal Implicito de Crank Nicolson
-def Crank_Nicolson(U, dt, t, F): 
-
-    def Residual_CN(X): 
-         
-         return  X - a - dt/2 *  F(X, t + dt)
-
-    a = U  +  dt/2 * F( U, t)  
-    return newton( Residual_CN, U )
-
-#Funcion del Esquema Temporal Runge-Kutta Embebido
-
-def adaptive_RK_emb(U, dt, t, F):
-    # Set tolerance for error estimation
-    tol = 1e-9
-    # Obtain coefficients and orders for the Butcher array
-    orders, Ns, a, b, bs, c = ButcherArray()
-    # Estimate state at two different orders
-    est1 = perform_RK(1, U, t, dt, F) 
-    est2 = perform_RK(2, U, t, dt, F) 
-    # Calculate optimal step size
-    h = min(dt, calculate_step_size(est1 - est2, tol, dt, min(orders)))
-    N_n = int(dt / h) + 1
-    n_dt = dt / N_n
-    est1 = U
-    est2 = U
-
-    # Perform multiple steps with the adaptive step size
-    for i in range(N_n):
-        time = t + i * dt / int(N_n)
-        est1 = est2
-        est2 = perform_RK(1, est1, time, n_dt, F)
-
-    final_state = est2
-    ierr = 0
-
-    return final_state,h
-
-# Function to perform one step of Runge-Kutta integration
-def perform_RK(order, U1, t, dt, F):
-    # Obtain coefficients and orders for the Butcher array
-    orders, Ns, a, b, bs, c = ButcherArray()
-    k = zeros([Ns, len(U1)])
-    k[0, :] = F(U1, t + c[0] * dt)
-
-    if order == 1: 
-        for i in range(1, Ns):
-            Up = U1
-            for j in range(i):
-                Up = Up + dt * a[i, j] * k[j, :]
-            k[i, :] = F(Up, t + c[i] * dt)
-        U2 = U1 + dt * matmul(b, k)
-
-    elif order == 2:
-        for i in range(1, Ns):
-            Up = U1
-            for j in range(i):
-                Up = Up + dt * a[i, j] * k[j, :]
-            k[i, :] = F(Up, t + c[i] * dt)
-        U2 = U1 + dt * matmul(bs, k)
-
-    return U2
-
-# Function to calculate the optimal step size based on the estimated error
-def calculate_step_size(dU, tol, dt, orders): 
-    error = norm(dU)
-
-    if error > tol:
-        step_size = dt * (tol / error) ** (1 / (orders + 1))
-    else:
-        step_size = dt
-
-    return step_size
+    return U + (t2 - t1) * F(U, t2)
 
 
-# Function to define the Butcher array coefficients for a specific Runge-Kutta method
-def ButcherArray(): 
-    orders = [2, 1]
-    Ns = 2 
-
-    a = zeros([Ns, Ns - 1])
-    b = zeros([Ns])
-    bs = zeros([Ns])
-    c = zeros([Ns])
-
-    c = [0., 1.]
-    a[0, :] = [0.]
-    a[1, :] = [1.]
-    b[:] = [1./2, 1./2]
-    bs[:] = [1., 0.]
-
-    return orders, Ns, a, b, bs, c
+def Crank_Nicolson(U, t1, t2, F):
+    
+    def ResidualCN(X):
+        
+        return X - a - (t2 -t1)/2 * F(X, t2 + (t2 + t1))
+    
+    a = U + (t2 - t1)/2 * F(U, t2)
+    
+    return newton(ResidualCN, U, maxiter = 600)
 
 
-# Funcion del esquema temporal Leap-Frog 
-def Leapfrog(U2, U1, t, dt, F):
-    return U1 + 2 * dt * F(U2, t)
+def Inverse_Euler(U, t1, t2, F):
+
+    def ResidualIE(G):
+        
+        return G - U - (t2 - t1) *  F(G, t2)
+
+    return newton(func = ResidualIE, x0 = U)
 
 
-# Funcion del esquema temporal Leap-Frog para el GBS
-def leap_frog(U, t1, t2, F):
+def RK4(U, t1, t2, F):
+    
+    k1 = F(U,t2)
+    k2 = F(U + (t2 - t1) * k1/2, t2 + (t2 -t1)/2)
+    k3 = F(U + (t2 - t1) * k2/2, t2 + (t2 -t1)/2)
+    k4 = F(U + (t2 - t1) * k3, t2 + (t2 - t1))
+    
+    return U + (t2 - t1) * (k1 + 2*k2 + 2*k3 + k4)/6
+    
+def Leap_Frog(U, t1, t2, F):
     dt = t2 - t1
     N = len(U)
     t_old = 0
@@ -142,15 +55,80 @@ def leap_frog(U, t1, t2, F):
     return U2
 
 
-#Funcion del esquema temporal GBS
-def GBS(U1, t1, t2, F, NL):
+def ERK(U, t1, t2, F):
+
+    tol = 1e-9
+    
+    # Calculates Runge-Kutta of order 1 and order 2 
+    stage1 = RK_stages(1, U, t2, (t2 - t1), F)  
+    stage2 = RK_stages(2, U, t2, (t2 - t1), F) 
+    
+    # Define the butcher array
+    orders, Ns, a, b, bs, c = butcher()
+    
+    # Determine the minimum step size between dt and the stepsize, which compares the error with the tolerance
+    h = min((t2 - t1), StepSize(stage1 - stage2, tol, (t2 - t1),  min(orders)))
+    N_n = int((t2 - t1)/h) + 1        # Number of steps to update solution U2
+    n_dt = (t2 - t1) / int(N_n)           
+    stage1 = U
+    stage2 = U
+
+    for i in range(N_n):
+        time = t2 + i * n_dt
+        stage1 = stage2
+        stage2 = RK_stages(1, stage1, time, n_dt, F)
+        
+    # Final solution
+    U2 = stage2
+    
+    ierr = 0
+
+    return U2
+def ERK2(U, t1, t2, F):
+
+    tol = 1e-9
+    
+    # Calculates Runge-Kutta of order 1 and order 2 
+    stage1 = RK_stages(1, U, t2, (t2 - t1), F)  
+    stage2 = RK_stages(2, U, t2, (t2 - t1), F) 
+    
+    # Define the butcher array
+    orders, Ns, a, b, bs, c = butcher()
+    
+    # Determine the minimum step size between dt and the stepsize, which compares the error with the tolerance
+    h = min((t2 - t1), StepSize(stage1 - stage2, tol, (t2 - t1),  min(orders)))
+    N_n = int((t2 - t1)/h) + 1        # Number of steps to update solution U2
+    n_dt = (t2 - t1) / int(N_n)           
+    stage1 = U
+    stage2 = U
+
+    for i in range(N_n):
+        time = t2 + i * n_dt
+        stage1 = stage2
+        stage2 = RK_stages(1, stage1, time, n_dt, F)
+        
+    # Final solution
+    U2 = stage2
+    
+    ierr = 0
+
+    return U2,h
+
+
+def GBS_solution_NL(U1, t1, t2, F, NL):
+    # Obtiene la secuencia de refinamiento de malla N
     N = mesh_refinement(NL)
+    # Inicializa una matriz U para almacenar las soluciones en diferentes niveles
     U = zeros((NL, len(U1)))
+    # Inicializa el resultado final U2
     U2 = zeros_like(U1)
 
+    # Itera sobre los niveles de refinamiento
     for i in range(NL):
+        # Aplica el esquema Modified Midpoint para avanzar en el tiempo y almacena la soluci�n en U
         Modified_midpoint_scheme(F, t1, t2, U1, U[i, :], N[i])
-
+    
+        # Aplica la correcci�n Richardson para obtener la soluci�n final
     U2 = Corrected_solution_Richardson(N, U)
 
     return U2
@@ -160,7 +138,6 @@ def mesh_refinement(Levels):
     N_Burlirsch = array([1, 2, 3, 4, 6, 8, 12, 16, 24, 32])
     N_Harmonic = array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
-    # Uncomment one of the following lines based on the desired refinement sequence
     # N = N_Romberg[:Levels]
     # N = N_Burlirsch[:Levels]
     N = N_Harmonic[:Levels]
@@ -170,7 +147,8 @@ def mesh_refinement(Levels):
 def Corrected_solution_Richardson(N, U):
     NL = len(N)
     Uc = zeros(U.shape[1])
-
+    
+    # Calcula los coeficientes de Lagrange para la correcci�n Richardson
     h = 1.0 / (2 * N)  # Leap Frog
     x = h**2  # even power of h (time step)
 

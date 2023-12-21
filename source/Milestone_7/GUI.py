@@ -3,9 +3,9 @@ from numpy import array, linspace
 import tkinter as tk
 from tkinter import ttk, Entry, StringVar
 import matplotlib.pyplot as plt
-from Temporal_schemes import Euler, Inverse_Euler, Crank_Nicolson, RK4, adaptive_RK_emb,Leapfrog,GBS,leap_frog
-from Cauchy_problem import Cauchy_problem, Cauchy_problem_LP, Cauchy_Problem_GBS, Cauchy_problem_RK4_emb
-from ODE_Arenstorf import Arenstorf
+from Temporal_Schemes import Euler, RK4, Crank_Nicolson, Leap_Frog, GBS_solution_NL, ERK
+from Cauchy_Problem import Cauchy_Problem
+from Orbits import Arenstorf
 
 class PlotApp:
     def __init__(self, root):
@@ -25,43 +25,53 @@ class PlotApp:
         self.function_combobox2.grid(row=3, column=0, padx=5, pady=5)
 
         self.nl_label = tk.Label(root, text='Number of levels (NL) for GBS:')
-        self.nl_label.grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
+        self.nl_label.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
 
         self.nl_entry_var1 = StringVar()
         self.nl_entry1 = Entry(root, textvariable=self.nl_entry_var1, state='disabled')
-        self.nl_entry1.grid(row=1, column=1, padx=5, pady=5)
+        self.nl_entry1.grid(row=5, column=0, padx=5, pady=5)
 
         self.nl_entry_var2 = StringVar()
         self.nl_entry2 = Entry(root, textvariable=self.nl_entry_var2, state='disabled')
-        self.nl_entry2.grid(row=3, column=1, padx=5, pady=5)
+        self.nl_entry2.grid(row=6, column=0, padx=5, pady=5)
 
-        self.plot_button = tk.Button(root, text='Plot', command=self.plot_function,height=6, width=10)
-        self.plot_button.grid(row=4, column=0, columnspan=2, pady=20)
+        self.plot_button = tk.Button(root, text='Plot', command=self.plot_function, height=6, width=10)
+        self.plot_button.grid(row=7, column=0, pady=20)
 
-        self.canvas_frame = tk.Frame(root)
-        self.canvas_frame.grid(row=0, column=2, rowspan=5, padx=10)
+        self.case_label = tk.Label(root, text='Select the case:')
+        self.case_label.grid(row=4, column=1, padx=5, pady=5, sticky=tk.W)
 
-        self.fig, (self.ax1, self.ax2) = plt.subplots(1, 2, figsize=(8, 8))
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.canvas_frame)
-        self.canvas.get_tk_widget().pack()
+        self.case_combobox = ttk.Combobox(root, values=['Case 1', 'Case 2'])
+        self.case_combobox.grid(row=5, column=1, padx=5, pady=5)
 
         # Asocia el metodo de actualizacion del Entry con la seleccion del metodo
         self.function_combobox1.bind("<<ComboboxSelected>>", lambda _: self.update_nl_entry_state(1))
         self.function_combobox2.bind("<<ComboboxSelected>>", lambda _: self.update_nl_entry_state(2))
 
+        # Crea un contenedor para las figuras y el lienzo
+        self.canvas_frame = tk.Frame(root)
+        self.canvas_frame.grid(row=0, column=2, rowspan=8, padx=10)
+
+        self.fig, (self.ax1, self.ax2) = plt.subplots(1, 2, figsize=(16, 8))
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.canvas_frame)
+        self.canvas.get_tk_widget().pack()
+
     def plot_function(self):
         function1 = self.function_combobox1.get()
         function2 = self.function_combobox2.get()
+        selected_case = self.case_combobox.get()
 
-        #U0 = array([0.994, 0, 0, -2.0015851063798025664053786222])
-        U0 = array([1.2, 0, 0, -1.049357510])
-        time_domain = linspace(0, 17.06521656015796, 100000)
+        # Condiciones iniciales para cada caso
+        U0_case1 = array([0.994, 0, 0, -2.0015851063798025664053786222])
+        U0_case2 = array([1.2, 0, 0, -1.049357510])
+        time_domain = linspace(0, 17.06521656015796, 50000)
 
         # Limpiar los ejes antes de cada nueva plot
         self.ax1.clear()
         self.ax2.clear()
 
         for i, function in enumerate([function1, function2]):
+            U0 = U0_case1 if selected_case == 'Case 1' else U0_case2
             if function == "GBS":
                 try:
                     NL = int(self.nl_entry_var1.get()) if i == 0 else int(self.nl_entry_var2.get())
@@ -69,13 +79,9 @@ class PlotApp:
                     print("Invalid value for NL. Using default value.")
                     NL = 1
 
-                U = Cauchy_Problem_GBS(time_domain, self.get_method(function), Arenstorf, U0, NL)
-            elif function == "RK4 Multi-Step":
-                U,h = Cauchy_problem_RK4_emb( Arenstorf, time_domain, U0, self.get_method(function))
-            elif function == "Leap Frog":
-                U = Cauchy_problem_LP(Arenstorf, time_domain, U0, self.get_method(function))
+                U = Cauchy_Problem(time_domain, self.get_method(function), Arenstorf, U0, NL)
             else:
-                U = Cauchy_problem(Arenstorf,time_domain, U0, self.get_method(function))
+                U = Cauchy_Problem(time_domain, self.get_method(function), Arenstorf, U0)
 
             ax = (self.ax1, self.ax2)[i]
             ax.plot(U[:, 0], U[:, 1],'r', label=function)
@@ -98,11 +104,11 @@ class PlotApp:
         elif method_name == "Crank Nicolson":
             return Crank_Nicolson
         elif method_name == "Leap Frog":
-            return Leapfrog
+            return Leap_Frog
         elif method_name == "GBS":
-            return GBS
+            return GBS_solution_NL
         elif method_name == "RK4 Multi-Step":
-            return adaptive_RK_emb
+            return ERK
         else:
             return None
 
@@ -121,3 +127,4 @@ class PlotApp:
 root = tk.Tk()
 app = PlotApp(root)
 root.mainloop()
+
