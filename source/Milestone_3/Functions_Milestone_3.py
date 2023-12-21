@@ -1,6 +1,6 @@
 from numpy import linspace, size, zeros, log10, float64, ones, vstack, array
 from numpy.linalg import norm, lstsq
-from ODEs.Temporal_Schemes import Euler, CN, RK4, Inverse_Euler
+from Temporal_Schemes import  euler_integration, crank_nicolson_integration, runge_kutta_4_integration, inverse_euler_integration
 
 # Solve Cauchy problem in the context of the Richardson error method
 def solve_cauchy_problem_richardson_error(F, t, Uo, temporal_scheme):
@@ -34,9 +34,9 @@ def calculate_richardson_error(F, t, Uo, temporal_scheme):
     U1 = solve_cauchy_problem_richardson_error(F, t1, Uo, temporal_scheme)
     U2 = solve_cauchy_problem_richardson_error(F, t2, Uo, temporal_scheme)
 
-    if temporal_scheme == RK4:
+    if temporal_scheme == runge_kutta_4_integration:
         q = 4
-    elif temporal_scheme == CN:
+    elif temporal_scheme == crank_nicolson_integration:
         q = 2
     else:
         q = 1
@@ -54,9 +54,9 @@ def calculate_convergence_ratio(F, t, Uo, temporal_scheme, p):
     t1 = t
     U1 = solve_cauchy_problem_richardson_error(F, t1, Uo, temporal_scheme)
 
-    if temporal_scheme == RK4:
+    if temporal_scheme == runge_kutta_4_integration:
         q = 4
-    elif temporal_scheme == CN:
+    elif temporal_scheme == crank_nicolson_integration:
         q = 2
     else:
         q = 1

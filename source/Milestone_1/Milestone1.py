@@ -68,11 +68,11 @@ time_step = 0.01
 simulate_orbit(euler_method, num_steps, time_step, initial_state, 'Kepler Orbit (EULER METHOD) for Steps={} and Time Step={}'.format(num_steps, time_step))
 
 # Runge-Kutta 4th order method simulation
-num_steps = 100
+num_steps = 1000
 time_step = 0.1
 simulate_orbit(runge_kutta_4th_order, num_steps, time_step, initial_state, 'Kepler Orbit (RK4 METHOD) for Steps={} and Time Step={}'.format(num_steps, time_step))
 
 # Crank-Nicolson method simulation
-num_steps = 100
+num_steps = 1000
 time_step = 0.1
 simulate_orbit(crank_nicolson, num_steps, time_step, initial_state, 'Kepler Orbit (C-N METHOD) for Steps={} and Time Step={}'.format(num_steps, time_step))

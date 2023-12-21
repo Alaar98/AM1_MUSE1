@@ -6,8 +6,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from ODEs.Temporal_Schemes import Euler, CN, RK4, Inverse_Euler, LF
-from ODEs.Temporal_Schemes import RKEmb
+from Temporal_Schemes import  runge_kutta_4_integration
 from N_Body_function import N_Body
 
 # Function to solve the N-body problem using a Cauchy approach
@@ -54,7 +53,7 @@ Uo = Initialize_N_body(Nc, Nb)
 def F(U, t):
     return N_Body(U, t, Nb, Nc)
 
-temporal_scheme = RK4
+temporal_scheme = runge_kutta_4_integration
 U = Cauchy_N_body(F, t, Uo, temporal_scheme)
 
 # Plotting 3D graph

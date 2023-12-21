@@ -5,8 +5,8 @@
 
 from numpy import array, zeros
 import matplotlib.pyplot as plt
-from ODEs.Temporal_Schemes import Euler, CN, RK4, Inverse_Euler
-from ODEs.Orbits import Kepler
+from Temporal_Schemes import euler_integration, crank_nicolson_integration, runge_kutta_4_integration, inverse_euler_integration
+from Orbits import Kepler
 
 # 1. Function to integrate one step using Euler method
 
@@ -35,13 +35,13 @@ def plot_kepler_orbit(N, dt, method):
     for i in range(1, N):
         t[i] = dt * i
         if method == 'Euler':
-            U = Euler(U, t, dt, Kepler)
+            U = euler_integration(U, t, dt, Kepler)
         elif method == 'CN':
-            U = CN(U, t, dt, Kepler)
+            U = crank_nicolson_integration(U, t, dt, Kepler)
         elif method == 'RK4':
-            U = RK4(U, t, dt, Kepler)
+            U = runge_kutta_4_integration(U, t, dt, Kepler)
         elif method == 'Inverse_Euler':
-            U = Inverse_Euler(U, t, dt, Kepler)
+            U = inverse_euler_integration(U, t, dt, Kepler)
             
         x[i] = U[0]
         y[i] = U[1]

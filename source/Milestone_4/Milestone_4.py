@@ -5,10 +5,10 @@
 
 from numpy import array, zeros, arange, float64, linspace, linalg, real, imag
 import matplotlib.pyplot as plt
-from ODEs.Cauchy_Problem import Cauchy_problem
-from ODEs.Temporal_Schemes import Euler, CN, RK4, Inverse_Euler, LF
-from ODEs.Oscillator import Oscillator
-from Functions_Milestone_4 import Stability_region
+from Cauchy_Problem import integrate_cauchy_problem
+from Temporal_Schemes import euler_integration, crank_nicolson_integration, runge_kutta_4_integration, inverse_euler_integration, leapfrog_integration
+from Oscillator import Oscillator
+from Functions_Milestone_4 import calculate_stability_region
 
 def Cauchy_problem_LP(F, t, Uo, temporal_scheme):
     dt = 0.01
@@ -37,23 +37,23 @@ def harmonic_oscillator_integration():
     F = Oscillator
 
     # Euler method
-    temporal_scheme = Euler
-    U_euler, x_euler, y_euler = Cauchy_problem(F, t, Uo, temporal_scheme)
+    temporal_scheme = euler_integration
+    U_euler, x_euler, y_euler = integrate_cauchy_problem(F, t, Uo, temporal_scheme)
 
     # Inverse Euler method
-    temporal_scheme = Inverse_Euler
-    U_inv_euler, x_inv_euler, y_inv_euler = Cauchy_problem(F, t, Uo, temporal_scheme)
+    temporal_scheme = inverse_euler_integration
+    U_inv_euler, x_inv_euler, y_inv_euler = integrate_cauchy_problem(F, t, Uo, temporal_scheme)
 
     # CN method
-    temporal_scheme = CN
-    U_cn, x_cn, y_cn = Cauchy_problem(F, t, Uo, temporal_scheme)
+    temporal_scheme = crank_nicolson_integration
+    U_cn, x_cn, y_cn = integrate_cauchy_problem(F, t, Uo, temporal_scheme)
 
     # RK4 method
-    temporal_scheme = RK4
-    U_rk4, x_rk4, y_rk4 = Cauchy_problem(F, t, Uo, temporal_scheme)
+    temporal_scheme = runge_kutta_4_integration
+    U_rk4, x_rk4, y_rk4 = integrate_cauchy_problem(F, t, Uo, temporal_scheme)
 
     # Linear predictor method
-    temporal_scheme = LF
+    temporal_scheme = leapfrog_integration
     U_lf, x_lf, y_lf = Cauchy_problem_LP(F, t, Uo, temporal_scheme)
 
     # Plot 1: Phase space plot
@@ -103,7 +103,7 @@ dt_values = [1, 0.1, 0.01]
 # Plotting stability regions of different methods
 def plot_stability_regions(method, title):
     for dt in dt_values:
-        x, y, rho = Stability_region(method, 100, -2.5, 0.5, -1.5, 1.5)
+        x, y, rho = calculate_stability_region(method, 100, -2.5, 0.5, -1.5, 1.5)
         plt.contour(x, y, rho.T, linspace(0, 1, 11))
         plt.scatter(real(Eigenvalues * dt), imag(Eigenvalues * dt), label=f'dt={dt}')
 
@@ -117,7 +117,7 @@ def plot_stability_regions(method, title):
     plt.show()
 
 # Stability regions for different methods
-plot_stability_regions(Euler, 'Regions of absolute stability Euler')
-plot_stability_regions(Inverse_Euler, 'Regions of absolute stability Inverse Euler')
-plot_stability_regions(CN, 'Regions of absolute stability CN')
-plot_stability_regions(RK4, 'Regions of absolute stability RK4')
+plot_stability_regions(euler_integration, 'Regions of absolute stability Euler')
+plot_stability_regions(inverse_euler_integration, 'Regions of absolute stability Inverse Euler')
+plot_stability_regions(crank_nicolson_integration, 'Regions of absolute stability CN')
+plot_stability_regions(runge_kutta_4_integration, 'Regions of absolute stability RK4')
