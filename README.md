@@ -18,5 +18,5 @@ Gracias a la resolución de estos ejercicios he podido aumentar mi nivel de prog
 Organización de módulos del Milestone 7 obtenida mediante la herramienta software-design:
 
 <p align="center">
-  <img src=".\source\Milestone_7\Organizacion_de_Modulos.png" alt="Descripción de la imagen">
+  <img src=".\source\Milestone_7\Organizacion_de_Modulos.png" alt="Organización de Módulos Hito 7">
 </p>
